@@ -5,12 +5,11 @@ import java.util.concurrent._
 
 import akka.actor.{Actor, ActorLogging}
 import com.typesafe.config.Config
-import io.github.junheng.akka.kafka.KTopic.{Payload, BatchPayload, Payloads}
-import org.apache.commons.codec.digest.DigestUtils
-import org.apache.kafka.clients.producer.{ProducerConfig, KafkaProducer, ProducerRecord}
+import io.github.junheng.akka.kafka.protocol.KTopicProtocol.{BatchPayload, Payload, Payloads}
+import org.apache.kafka.clients.producer.{KafkaProducer, ProducerConfig, ProducerRecord}
 import org.apache.kafka.common.serialization.ByteArraySerializer
-import scala.collection.JavaConversions._
 
+import scala.collection.JavaConversions._
 import scala.concurrent.{ExecutionContext, Future}
 
 class KTopic(zookeepers: String, brokers: String, consumerCache: Int, config: Config) extends Actor with ActorLogging {
@@ -58,33 +57,4 @@ class KTopic(zookeepers: String, brokers: String, consumerCache: Int, config: Co
     props.put(ProducerConfig.ACKS_CONFIG, "0") //no wait for brokers
     props
   }
-}
-
-object KTopic {
-
-  case class GetGroup(group: String, pullerCount: Int)
-
-  /**
-    * use BatchPayload instead
-    *
-    * @param payloads
-    */
-  @deprecated
-  case class Payloads(payloads: List[Array[Byte]])
-
-  /**
-    * provide a key and content to produce a message
-    * if no key provide will generated with md5 on client
-    *
-    * @param key     message key
-    * @param content message content
-    */
-  case class Payload(key: Array[Byte], content: Array[Byte])
-
-  object Payload {
-    def apply(content: Array[Byte]): Payload = Payload(DigestUtils.md5(content), content)
-  }
-
-  case class BatchPayload(payloads: List[Payload])
-
 }

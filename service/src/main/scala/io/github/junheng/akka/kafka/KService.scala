@@ -40,46 +40,6 @@ object KService {
 
   var propsKGroup: (String, String, String, Int, Int) => Props = (zookeepers, topic, group, pullerCount, cache) => Props(new KGroup(zookeepers, topic, group, pullerCount, cache))
 
-  def topic(topic: String)(implicit context: ActorContext) = {
-    context.actorOf(
-      ClusterSingletonProxy.props(
-        singletonManagerPath = s"/user/kafka/$topic",
-        settings = ClusterSingletonProxySettings(context.system).withRole("Kafka")
-      ),
-      s"$topic-proxy"
-    )
-  }
-
-  def group(topic: String, group: String)(implicit context: ActorContext) = {
-    context.actorOf(
-      ClusterSingletonProxy.props(
-        singletonManagerPath = s"/user/kafka/$topic/singleton/$group",
-        settings = ClusterSingletonProxySettings(context.system).withRole("Kafka")
-      ),
-      s"$topic-$group-proxy"
-    )
-  }
-
-  def startOnCluster(config: Config)(implicit system: ActorSystem) = {
-    val defaultPropsKTopic = propsKTopic
-    val defaultPropsKGroup = propsKGroup
-    propsKTopic = (zookeepers, brokers, consumerCache, topicConfig) => {
-      ClusterSingletonManager.props(
-        singletonProps = defaultPropsKTopic(zookeepers, brokers, consumerCache, topicConfig),
-        terminationMessage = PoisonPill,
-        settings = ClusterSingletonManagerSettings(system).withRole("Kafka")
-      )
-    }
-    propsKGroup = (zookeepers, topic, group, pullerCount, cache) => {
-      ClusterSingletonManager.props(
-        singletonProps = defaultPropsKGroup(zookeepers, topic, group, pullerCount, cache),
-        terminationMessage = PoisonPill,
-        settings = ClusterSingletonManagerSettings(system).withRole("Kafka")
-      )
-    }
-    start(config)
-  }
-
   def defaultOfKGroupProps(zookeepers: String, topic: String, group: String, pullerCount: Int, cache: Int): Props = {
     Props(new KGroup(zookeepers, topic, group, pullerCount, cache))
   }

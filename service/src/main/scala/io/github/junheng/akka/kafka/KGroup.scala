@@ -1,10 +1,10 @@
 package io.github.junheng.akka.kafka
 
-import akka.actor.{ActorLogging, Actor}
-import io.github.junheng.akka.kafka.KConsumerBaseband.Configuration
-import io.github.junheng.akka.kafka.KConsumerManager.PartitionStatus
-import io.github.junheng.akka.kafka.KGroup._
+import akka.actor.{Actor, ActorLogging}
 import akka.pattern._
+import io.github.junheng.akka.kafka.KConsumerBaseband.Configuration
+import io.github.junheng.akka.kafka.protocol.KConsumerManagerProtocol.PartitionStatus
+import io.github.junheng.akka.kafka.protocol.KGroupProtocol._
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -52,19 +52,4 @@ class KGroup(zookeepers: String, topic: String, group: String, pullerCount: Int,
       statuses.sortBy(_.pid)
     )
   }
-}
-
-object KGroup {
-
-  case object GetStatus
-
-  case class KGroupStatus(topic: String, group: String, partitions: Int, logSize: Long, offset: Long, lag: Long, detail: List[PartitionStatus])
-
-  case object Rewind
-
-
-  case class Pull(amount: Int)
-
-  case class Pulled(topic: String, group: String, payloads: List[Array[Byte]])
-
 }

@@ -1,13 +1,13 @@
 package io.github.junheng.akka.kafka
 
 import akka.event.LoggingAdapter
-import io.github.junheng.akka.kafka.KConsumerManager.PartitionStatus
-import kafka.api.{OffsetFetchResponse, OffsetFetchRequest, PartitionOffsetRequestInfo, OffsetRequest}
+import io.github.junheng.akka.kafka.protocol.KConsumerManagerProtocol.PartitionStatus
+import kafka.api.{OffsetFetchRequest, OffsetFetchResponse, OffsetRequest, PartitionOffsetRequestInfo}
 import kafka.client.ClientUtils
-import kafka.common.{ErrorMapping, OffsetMetadataAndError, BrokerNotAvailableException, TopicAndPartition}
+import kafka.common.{BrokerNotAvailableException, ErrorMapping, OffsetMetadataAndError, TopicAndPartition}
 import kafka.consumer.SimpleConsumer
 import kafka.network.BlockingChannel
-import kafka.utils.{ZKStringSerializer, ZKGroupTopicDirs, Json, ZkUtils}
+import kafka.utils.{Json, ZKGroupTopicDirs, ZKStringSerializer, ZkUtils}
 import org.I0Itec.zkclient.ZkClient
 import org.I0Itec.zkclient.exception.ZkNoNodeException
 
@@ -143,10 +143,4 @@ class KConsumerManager(topic: String, group: String, zookeeper: String, log: Log
     }
 
   }
-}
-
-object KConsumerManager {
-
-  case class PartitionStatus(group: String, topic: String, pid: Int, offset: Long, logSize: Long, lag: Long, owner: String)
-
 }
