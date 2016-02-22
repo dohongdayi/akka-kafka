@@ -46,7 +46,7 @@
 
     <logger name="org.apache.zookeeper" level="WARN"/>
 
-    <root level="DEBUG">
+    <root level="INFO">
         <appender-ref ref="info"/>
         <appender-ref ref="log"/>
         <appender-ref ref="console"/>
