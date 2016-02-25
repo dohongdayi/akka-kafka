@@ -13,7 +13,7 @@ object KGroupProtocol {
 
   case class Pull(amount: Int)
 
-  case class Pulled(topic: String, group: String, payloads: List[Array[Byte]])
+  case class Pulled(topic: String, group: String, payloads: List[Array[Byte]]) extends KafkaPayloadMessage
 
 
 }

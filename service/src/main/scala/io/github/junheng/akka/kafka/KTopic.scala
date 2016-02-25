@@ -5,8 +5,8 @@ import java.util.concurrent._
 
 import akka.actor.{Actor, ActorLogging}
 import com.typesafe.config.Config
-import io.github.junheng.akka.kafka.protocol.KTopicProtocol.{BatchPayload, Payload, Payloads}
-import org.apache.kafka.clients.producer.{KafkaProducer, ProducerConfig, ProducerRecord}
+import io.github.junheng.akka.kafka.protocol.KTopicProtocol.{BatchPayload, Payload}
+import org.apache.kafka.clients.producer.{RecordMetadata, KafkaProducer, ProducerConfig, ProducerRecord}
 import org.apache.kafka.common.serialization.ByteArraySerializer
 
 import scala.collection.JavaConversions._
@@ -17,8 +17,11 @@ class KTopic(zookeepers: String, brokers: String, consumerCache: Int, config: Co
 
   private implicit val executor =
     ExecutionContext.fromExecutor(
-      new ThreadPoolExecutor(8, 32, 30, TimeUnit.SECONDS, new LinkedBlockingQueue[Runnable](1000), new RejectedExecutionHandler {
-        override def rejectedExecution(r: Runnable, executor: ThreadPoolExecutor): Unit = executor.getQueue.put(r) //block call until available
+      new ThreadPoolExecutor(8, 64, 30, TimeUnit.SECONDS, new LinkedBlockingQueue[Runnable](1000), new RejectedExecutionHandler {
+        override def rejectedExecution(r: Runnable, executor: ThreadPoolExecutor): Unit = {
+          log.warning("thread queue was full")
+          executor.getQueue.put(r)
+        } //block call until available
       })
     )
 
@@ -37,11 +40,14 @@ class KTopic(zookeepers: String, brokers: String, consumerCache: Int, config: Co
   }
 
   override def receive: Actor.Receive = {
-    case Payloads(payloads) => Future(payloads.map(s => new KRecord(topicId, s)).foreach(producer.send))
-    case BatchPayload(payloads) => Future(payloads.foreach(p => producer.send(new KRecord(topicId, p.key, p.content))))
+    case BatchPayload(payloads) => Future(payloads.foreach(p => send(p)))
     case Payload(key, content) => Future(producer.send(new KRecord(topicId, key, content)))
   }
 
+
+  def send(p: Payload) = {
+    producer.send(new ProducerRecord(topicId, p.key, p.content))
+  }
 
   override def unhandled(message: Any): Unit = log.warning(s"unexpected message ${message.getClass.getCanonicalName}")
 
@@ -50,11 +56,9 @@ class KTopic(zookeepers: String, brokers: String, consumerCache: Int, config: Co
     props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, brokers)
     props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, classOf[ByteArraySerializer].getName)
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, classOf[ByteArraySerializer].getName)
-    props.put(ProducerConfig.BUFFER_MEMORY_CONFIG, "134217728")
-    props.put(ProducerConfig.BATCH_SIZE_CONFIG, "5242880")
-    props.put(ProducerConfig.LINGER_MS_CONFIG, "500")
-    props.put(ProducerConfig.COMPRESSION_TYPE_CONFIG, "gzip")
-    props.put(ProducerConfig.ACKS_CONFIG, "0") //no wait for brokers
+    props.put(ProducerConfig.BUFFER_MEMORY_CONFIG, "67108864")
+    props.put(ProducerConfig.BATCH_SIZE_CONFIG, "128000")
+    props.put(ProducerConfig.ACKS_CONFIG, "1")
     props
   }
 }

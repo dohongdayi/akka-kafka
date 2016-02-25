@@ -9,7 +9,8 @@ lazy val protocol = project
   .settings(
     name := "akka-kafka-protocol",
     version := "0.11-SNAPSHOT",
-    libraryDependencies ++= dependencies.common
+    libraryDependencies ++= dependencies.common,
+    libraryDependencies ++= dependencies.akka
   )
 
 
