@@ -23,7 +23,7 @@ object APP extends App {
 
   LoadMonitor.monitorActorRef = system.actorOf(Props(new SafeMailboxMonitor(config.getConfig("safe-mailbox-monitor"))), "safe-mailbox-monitor")
 
-  ServiceLocator.initialize("phb01,phb02,phb03")
+  ServiceLocator.initialize(config.getString("server-locator.zookeepers"), config.getString("server-locator.name"))
 
   Accessor.start(config.getString("accessor.host"), config.getInt("accessor.port"))
 
