@@ -98,6 +98,7 @@ class KConsumerBaseband(props: Configuration, log: LoggingAdapter) {
     props.put("auto.offset.reset", autoOffsetReset)
     props.put("consumer.timeout.ms", "15000")
     props.put("fetch.message.max.bytes", "16777216")
+    props.put("partition.assignment.strategy", "roundrobin")
     new ConsumerConfig(props)
   }
 }
