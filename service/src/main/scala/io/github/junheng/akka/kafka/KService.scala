@@ -15,10 +15,11 @@ class KService(config: Config) extends Actor with ActorLogging {
 
   private val zookeepers = config.getString("zookeepers")
   private val brokers = config.getString("brokers")
+  private val defaultCache = config.getInt("cache")
 
   override def preStart(): Unit = {
     config.getConfigList("topics") foreach { topicConfig =>
-      val cache = if(topicConfig.atKey("cache").isEmpty) 100 else topicConfig.getInt("cache")
+      val cache = if(topicConfig.atKey("cache").isEmpty) defaultCache else topicConfig.getInt("cache")
       val topicId = topicConfig.getString("id")
       topics += topicId -> context.actorOf(KService.propsKTopic(zookeepers, brokers, cache, topicConfig), topicId)
     }
